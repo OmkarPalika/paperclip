@@ -73,15 +73,20 @@ export async function executeMistralRequest(
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        return {
-          exitCode: 1,
-          signal: null,
-          timedOut: false,
-          errorMessage: `Mistral API error: ${response.status} ${response.statusText}${
-            errorData.message ? ` - ${errorData.message}` : ""
-          }`,
-          errorCode: "MISTRAL_API_ERROR",
-        };
+        const shouldRetry = response.status >= 500 || response.status === 429;
+        if (!shouldRetry) {
+          return {
+            exitCode: 1,
+            signal: null,
+            timedOut: false,
+            errorMessage: `Mistral API error: ${response.status} ${response.statusText}${
+              errorData.message ? ` - ${errorData.message}` : ""
+            }`,
+            errorCode: "MISTRAL_API_ERROR",
+          };
+        }
+        // For retriable errors, throw to trigger retry logic
+        throw new Error(`[${response.status}] ${errorData.message || response.statusText}`);
       }
 
       const sessionId = randomUUID();
@@ -89,6 +94,9 @@ export async function executeMistralRequest(
       
       // Handle streaming response
       const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("Response body is not readable");
+      }
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();

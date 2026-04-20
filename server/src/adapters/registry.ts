@@ -82,7 +82,7 @@ import {
 } from "hermes-paperclip-adapter";
 import {
   execute as mistralExecute,
-  testEnvironment as mistralTestEnvironment
+  testEnvironment as mistralTestEnvironment,
   sessionCodec as mistralSessionCodec,
 } from "@paperclipai/adapter-mistral-api/server";
 import {
@@ -229,9 +229,7 @@ const hermesLocalAdapter: ServerAdapterModule = {
 const mistralApiAdapter: ServerAdapterModule = {
   type: "mistral_api",
   execute: mistralExecute,
-  testEnvironment: mistralTestEnvironment,
-  parse: mistralParse,
-  sessionCodec: mistralSessionCodec,
+  testEnvironment: mistralTestEnvironment,`n  sessionCodec: mistralSessionCodec,
   models: mistralModels,
   supportsLocalAgentJwt: false,
   supportsInstructionsBundle: false,
@@ -459,5 +457,6 @@ export function findActiveServerAdapter(type: string): ServerAdapterModule | nul
   }
   return adaptersByType.get(type) ?? null;
 }
+
 
 
